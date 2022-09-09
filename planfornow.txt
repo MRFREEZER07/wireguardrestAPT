@@ -1,0 +1,14 @@
+from shelve import DbfilenameShelf
+
+
+subnet -> "172.20.0.1/16"
+
+extract allHOST in the subnet using allhost.py
+STORE IT IN database as allocated and free
+
+if a new peer is added it show get an ip from free ip's
+
+
+API NEED
+-> PUBLIC KEY
+-> add www-data to sudoers

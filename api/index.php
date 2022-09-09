@@ -5,6 +5,7 @@ require_once("lib/Database.class.php");
 require_once("lib/Signup.class.php");
 require_once("lib/Auth.class.php");
 require_once("lib/User.class.php");
+require_once('lib/Wireguard.class.php');
 class API extends REST
 {
     public $data = "";
@@ -78,24 +79,6 @@ class API extends REST
                 } else {
                     $this->response($this->json(['error'=>'method_not_found']), 404);
                 }
-    
-                /**
-                 * Use the following snippet if you want to include multiple files
-                 */
-                    // $methods = scandir($dir);
-                    // //var_dump($methods);
-                    // foreach($methods as $m){
-                    //     if($m == "." or $m == ".."){
-                    //         continue;
-                    //     }
-                    //     $basem = basename($m, '.php');
-                    //     //echo "Trying to call $basem() for $func()\n";
-                    //     if($basem == $func){
-                    //         include $dir."/".$m;
-                    //         $this->current_call = Closure::bind(${$basem}, $this, get_class());
-                    //         $this->$basem();
-                    //     }
-                    // }
             } else {
                 //we can even process functions without namespace here.
                 $this->response($this->json(["namespace"=>$_GET,'error'=>'method_not_found']), 404);
@@ -170,7 +153,7 @@ class API extends REST
         }
     }
 
-  
+
 
 
 

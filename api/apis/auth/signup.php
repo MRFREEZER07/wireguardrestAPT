@@ -1,11 +1,12 @@
 <?php
+
 ${basename(__FILE__, '.php')} = function () {
     $username = $this->_request['username'];
     $password  = $this->_request['password'];
     $email  = $this->_request['email'];
+    //TODO :change signup to one ip
     if ($this->get_request_method()=="POST" and isset($username) and isset($password) and isset($email)) {
         try {
-            
             $s = new Signup($username, $password, $email);
             $data = [
                 "message" => "Signup success",
