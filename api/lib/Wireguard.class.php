@@ -26,7 +26,41 @@ class Wireguard {
 
     public function getPeers()
     {
+        $cmd = "sudo wg show $this->device ";
+        $op = shell_exec($cmd);
+        $result =explode(PHP_EOL, $op); //seperate using delimiter \n
+        $interfaceOut = array_slice($result, 0, 4); //seperating the interface as a seperate array
+        $peersOut= array_slice($result, 5); //seperating the peers as a seperate array
+        $peers =array();
+        $interface =array();
+        $peerCount = -1; //using peercount as array index in peers
+        
+        //seperating interface
+        foreach ($interfaceOut as $value) 
+        {
+            $value = trim($value);
+            $data = explode(':', $value);
+            $interface[trim($data[0])] = trim($data[1]);
 
+        }
+
+        foreach($peersOut as $value){
+            $value =trim($value);
+            if(strlen($value)>1)
+            {
+                if($this->startsWith($value,'peer'))               
+                {
+                    $peerCount++;
+                }
+                $data =explode(':', $value);
+                $peers[$peerCount][trim($data[0])]=trim($data[1]);
+            }
+        }
+        return [
+            'interface'=>$interface,
+            'peer'=>$peers
+        ];
+        
     }  
     public function startsWith($string, $startString)
     {
@@ -36,7 +70,7 @@ class Wireguard {
 
     public function getPeer($publicKey) //get a single peer
     {   //TODO:handle the peer that not present
-        $cmd = "sudo wg show wg0 | grep -A4  '$publicKey'";
+        $cmd = "sudo wg show $this->device | grep -A4  '$publicKey'";
         $op = shell_exec($cmd);
         $result =explode(PHP_EOL, $op); //seperate using delimiter \n
         $peer =array();
