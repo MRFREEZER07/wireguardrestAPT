@@ -9,6 +9,21 @@ class Wireguard {
         $this->db =Database::get_connection();
     }
 
+
+    public function addPeer($publicKey,$ip)
+    {
+        $cmd ="sudo wg set $this->device peer \"$publicKey\" allowed-ips \"$ip\"" ;
+    }
+
+    public function removePeer($publicKey)
+    {
+        $cmd = "sudo wg set $this->device peer \"$publicKey\" remove";
+        $result =0;
+        system($cmd,$result); //check return code from system echo $?
+        return $result ==0 ;
+
+    }
+
     public function getPeers()
     {
 
@@ -19,9 +34,9 @@ class Wireguard {
         return (substr($string, 0, $len) === $startString);
     }
 
-    public function getPeer($public) //get a single peer
-    {
-        $cmd = "sudo wg show wg0 | grep -A4  '$public'";
+    public function getPeer($publicKey) //get a single peer
+    {   //TODO:handle the peer that not present
+        $cmd = "sudo wg show wg0 | grep -A4  '$publicKey'";
         $op = shell_exec($cmd);
         $result =explode(PHP_EOL, $op); //seperate using delimiter \n
         $peer =array();
