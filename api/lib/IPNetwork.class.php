@@ -113,20 +113,81 @@ class IPNetwork
       return $result['ip_addr'];
   }
 
+  public function getNextInsertID()
+  {
+      $last_ip = $this->collection->findOne([], [
+          'limit' => 1,
+          'sort' => ['_id' => -1],
+      ]);
+      return $last_ip['_id'] + 1;
+  }
 
-    public function allocateIP($ip, $email, $public_key)
+    public function allocateIP($ip, $email, $public_key, $reserved)
     {
+        try {
+            $result = $this->collection->updateOne([
+                'ip_addr' => $ip,
+                'wgdevice' => $this->wgdevice
+            ], [
+                '$set' => [
+                    'allocated' => true,
+                    'email' => $email,
+                    'public_key' => $public_key,
+                    'reserved' => $reserved
+                ]
+            ]);
+            return $ip;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
-    public function getIP($key)
+    public function reserveIP($email, $ip, $reserve=true)
     {
+        try {
+            $result = $this->collection->updateOne([
+                'ip_addr' => $ip,
+                'wgdevice' => $this->wgdevice,
+                'email' => $email
+            ], [
+                '$set' => [
+                    'reserved' => $reserve
+                ]
+            ]);
+            return boolval($result->getModifiedCount());
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
-    public function generateIPFromCIDR()
+
+    public function getAll()
     {
+        return iterator_to_array($this->collection->find(
+            [
+                '$and' => [
+                    [
+                    'email'=>[
+                        '$ne' => ""
+                    ],],[
+                    'email'=>[
+                        '$exists' => true
+                    ],]
+                ],
+                'wgdevice' => $this->wgdevice
+            ]
+        ));
     }
 
-    public function getUser($ip)
-    {
-    }
+    // public function getIP($key)
+    // {
+    // }
+
+    // public function generateIPFromCIDR()
+    // {
+    // }
+
+    // public function getUser($ip)
+    // {
+    // }
 }

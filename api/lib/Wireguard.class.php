@@ -12,11 +12,28 @@ class Wireguard
     }
 
 
-    public function addPeer($publicKey, $ip)
+    public function addPeer($publicKey, $email, $reserved, $ip=null)
     {
-        $cmd ="sudo wg set $this->device peer \"$publicKey\" allowed-ips \"$ip\"" ;
+        if (!$this->hasPeer($publicKey)) {
+            $ipnet = new IPNetwork($this->getCIDR(), $this->device);
+            $next_ip = $ipnet->getNextIP($email, $ip);
+            $cmd = "sudo wg set $this->device peer \"$publicKey\" allowed-ips \"$next_ip/32\"";
+            system($cmd, $result);
+            system("sudo wg-quick save $this->device", $result1);
+            if ($result == 0 and $result1 == 0) {
+                return $ipnet->allocateIP($next_ip, $email, $publicKey, boolval($reserved));
+            } else {
+                return false;
+            }
+        } else {
+            throw new Exception("Peer already exists");
+        }
     }
 
+    public function hasPeer($public)
+    {
+        return count($this->getPeer($public)) >= 1;
+    }
     public function removePeer($publicKey)
     {
         $cmd = "sudo wg set $this->device peer \"$publicKey\" remove";
@@ -99,5 +116,17 @@ class Wireguard
                 return trim($line[1]);
             }
         }
+    }
+
+    public function reserve($ip, $email)
+    {
+        $ipnet = new IPNetwork($this->getCIDR(), $this->device);
+        return $ipnet->reserveIP($email, $ip, true);
+    }
+
+    public function unreserve($ip, $email)
+    {
+        $ipnet = new IPNetwork($this->getCIDR(), $this->device);
+        return $ipnet->reserveIP($email, $ip, false);
     }
 }
