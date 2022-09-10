@@ -1,7 +1,9 @@
-<?php 
+<?php
+
 require_once "Database.class.php";
 
-class Wireguard {
+class Wireguard
+{
     private $device;
     public function __construct($device)
     {
@@ -10,7 +12,7 @@ class Wireguard {
     }
 
 
-    public function addPeer($publicKey,$ip)
+    public function addPeer($publicKey, $ip)
     {
         $cmd ="sudo wg set $this->device peer \"$publicKey\" allowed-ips \"$ip\"" ;
     }
@@ -19,9 +21,8 @@ class Wireguard {
     {
         $cmd = "sudo wg set $this->device peer \"$publicKey\" remove";
         $result =0;
-        system($cmd,$result); //check return code from system echo $?
+        system($cmd, $result); //check return code from system echo $?
         return $result ==0 ;
-
     }
 
     public function getPeers()
@@ -34,22 +35,18 @@ class Wireguard {
         $peers =array();
         $interface =array();
         $peerCount = -1; //using peercount as array index in peers
-        
+
         //seperating interface
-        foreach ($interfaceOut as $value) 
-        {
+        foreach ($interfaceOut as $value) {
             $value = trim($value);
             $data = explode(':', $value);
             $interface[trim($data[0])] = trim($data[1]);
-
         }
 
-        foreach($peersOut as $value){
+        foreach ($peersOut as $value) {
             $value =trim($value);
-            if(strlen($value)>1)
-            {
-                if($this->startsWith($value,'peer'))               
-                {
+            if (strlen($value)>1) {
+                if ($this->startsWith($value, 'peer')) {
                     $peerCount++;
                 }
                 $data =explode(':', $value);
@@ -60,8 +57,7 @@ class Wireguard {
             'interface'=>$interface,
             'peer'=>$peers
         ];
-        
-    }  
+    }
     public function startsWith($string, $startString)
     {
         $len = strlen($startString);
@@ -75,28 +71,33 @@ class Wireguard {
         $result =explode(PHP_EOL, $op); //seperate using delimiter \n
         $peer =array();
         $peerCount = 0;
-        foreach ($result as $value) //making sure that peer occured one time
-        {
-            if (!empty($value))
-            {   
-
+        foreach ($result as $value) { //making sure that peer occured one time
+            if (!empty($value)) {
                 $entry = array();
                 $value=trim($value);
-                if($this->startsWith($value,'peer'))
-                {
+                if ($this->startsWith($value, 'peer')) {
                     $peerCount ++;
-                    if($peerCount>=2)
-                    {
+                    if ($peerCount>=2) {
                         break;
                     }
                 }
                 $data =explode(': ', $value);
                 $peer[$data[0]] = $data[1];
-                
             }
         }
         return $peer;
     }
 
-
+    public function getCIDR()
+    {
+        $cmd = "sudo cat /etc/wireguard/$this->device.conf | head -n 3";
+        $line = trim(shell_exec($cmd));
+        $lines = explode(PHP_EOL, $line);
+        foreach ($lines as $line) {
+            $line = explode('=', $line);
+            if (trim($line[0]) == "Address") {
+                return trim($line[1]);
+            }
+        }
+    }
 }

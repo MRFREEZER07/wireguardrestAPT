@@ -1,8 +1,28 @@
 <?php
 
+require('/var/www/html/wgapi/api/vendor/autoload.php');
+
 class Database
 {
     public static $db;
+
+    public function __construct()
+    {
+        if (!extension_loaded('mongodb')) {
+            die("database extension not loaded");
+        }
+        $this->mongoClient = new MongoDB\Client('mongodb://karthik:sridevi21@mongodb.selfmade.ninja/?authSource=users');
+        if (!$this->mongoClient) {
+            http_response_code(500);
+            die("cannot connect to  db");
+        }
+    }
+
+    public function getMongoDB($db)
+    {
+        return $this->mongoClient->$db;
+    }
+
 
 
     public static function get_connection()
@@ -19,5 +39,10 @@ class Database
                 return Database::$db;
             }
         }
+    }
+    //convert bson to assoc array
+    public function getArray($doc)
+    {
+        return json_decode(json_encode($doc),true);
     }
 }
